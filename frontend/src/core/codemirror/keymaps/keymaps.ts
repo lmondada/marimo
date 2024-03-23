@@ -14,7 +14,7 @@ export function keymapBundle(
   callbacks: {
     focusUp: () => void;
     focusDown: () => void;
-    deleteCell: (options?: { deleteIfFirst: boolean }) => void;
+    deleteCell: (deleteIfFirst?: boolean) => void;
   },
 ): Extension[] {
   switch (config.preset) {
@@ -38,7 +38,7 @@ export function keymapBundle(
             run: (cm) => {
               // Delete cell if it is empty and it is not the first cell
               if (cm.state.doc.toString() === "") {
-                callbacks.deleteCell({ deleteIfFirst: false });
+                callbacks.deleteCell(false);
                 return true;
               }
               return false;
