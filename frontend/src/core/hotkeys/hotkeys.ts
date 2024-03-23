@@ -211,6 +211,11 @@ const DEFAULT_HOT_KEY = {
     group: "Other",
     key: "Mod-k",
   },
+  "global.workerSelector": {
+    name: "Worker selector",
+    group: "Other",
+    key: "Mod-e",
+  },
   "global.runStale": {
     name: "Run all modified cells",
     group: "Running Cells",

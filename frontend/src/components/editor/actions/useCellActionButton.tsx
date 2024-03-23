@@ -2,10 +2,11 @@
 import { downloadCellOutput } from "@/components/export/export-output-button";
 import { Switch } from "@/components/ui/switch";
 import { formatEditorViews } from "@/core/codemirror/format";
-import { useCellActions } from "@/core/cells/cells";
+import { useCellActions, useSetDefaultWorkerIfEmpty } from "@/core/cells/cells";
 import {
   ImageIcon,
   Code2Icon,
+  CloudLightning,
   ZapIcon,
   PlusCircleIcon,
   ChevronUpIcon,
@@ -31,11 +32,14 @@ import { NameCellInput } from "./name-cell-input";
 import { getFeatureFlag } from "@/core/config/feature-flag";
 import { useSetAtom } from "jotai";
 import { aiCompletionCellAtom } from "@/core/ai/state";
+import { WorkerDropdown } from "./worker-dropdown";
+import { useConnectedWorkers, useDefaultWorkerUrl } from "@/core/workers/state";
 
 export interface CellActionButtonProps
   extends Pick<CellData, "name" | "config"> {
   cellId: CellId;
   status: CellStatus;
+  workerUrl: string | null;
   editorView: EditorView | null;
   hasOutput: boolean;
 }
@@ -47,12 +51,14 @@ export function useCellActionButtons({
   name,
   hasOutput,
   status,
+  workerUrl,
 }: CellActionButtonProps) {
   const {
     createNewCell: createCell,
     updateCellConfig,
     updateCellCode,
     updateCellName,
+    updateCellWorker,
     deleteCell,
     moveCell,
     sendToTop,
@@ -60,6 +66,11 @@ export function useCellActionButtons({
   } = useCellActions();
   const runCell = useRunCell(cellId);
   const setAiCompletionCell = useSetAtom(aiCompletionCellAtom);
+  const connectedWorkers = useConnectedWorkers();
+  const defaultWorkerUrl = useDefaultWorkerUrl();
+
+  // Assign a default worker to the cells if possible
+  useSetDefaultWorkerIfEmpty();
 
   const toggleDisabled = async () => {
     const newConfig = { disabled: !config.disabled };
@@ -100,6 +111,26 @@ export function useCellActionButtons({
             value={name}
             onChange={(newName) => updateCellName({ cellId, name: newName })}
           />
+        ),
+      },
+      {
+        icon: <CloudLightning size={13} strokeWidth={1.5} />,
+        label: "Cell worker",
+        disableClick: true,
+        handle: (evt) => {
+          evt?.stopPropagation();
+          evt?.preventDefault();
+        },
+        rightElement: workerUrl ? (
+          <WorkerDropdown
+            value={workerUrl}
+            options={connectedWorkers}
+            onChange={(newUrl) => {
+              updateCellWorker({ cellId, workerUrl: newUrl });
+            }}
+          />
+        ) : (
+          <span className="text-red-300 italic">no connected worker</span>
         ),
       },
       {
@@ -180,7 +211,12 @@ export function useCellActionButtons({
         ),
         label: "Create cell above",
         hotkey: "cell.createAbove",
-        handle: () => createCell({ cellId, before: true }),
+        handle: () =>
+          createCell({
+            cellId,
+            before: true,
+            defaultWorkerUrl,
+          }),
       },
       {
         icon: (
@@ -191,7 +227,12 @@ export function useCellActionButtons({
         ),
         label: "Create cell below",
         hotkey: "cell.createBelow",
-        handle: () => createCell({ cellId, before: false }),
+        handle: () =>
+          createCell({
+            cellId,
+            before: false,
+            defaultWorkerUrl,
+          }),
       },
       {
         icon: <ChevronUpIcon size={13} strokeWidth={1.5} />,

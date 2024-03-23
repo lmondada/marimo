@@ -24,6 +24,7 @@ const props: CellProps = {
   consoleOutputs: [],
   status: "idle",
   edited: false,
+  workerUrl: null,
   interrupted: false,
   errored: false,
   stopped: false,

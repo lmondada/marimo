@@ -1,6 +1,6 @@
 /* Copyright 2024 Marimo. All rights reserved. */
 import { atom, useAtom, useAtomValue, useSetAtom } from "jotai";
-import { ReducerWithoutAction, createRef, useMemo } from "react";
+import { ReducerWithoutAction, createRef, useEffect, useMemo } from "react";
 import { CellMessage } from "../kernel/messages";
 import {
   CellConfig,
@@ -34,6 +34,7 @@ import { historyField } from "@codemirror/commands";
 import { clamp } from "@/utils/math";
 import { LayoutData } from "../layout/layout";
 import { isEqual } from "lodash-es";
+import { useDefaultWorkerUrl } from "../workers/state";
 
 /**
  * The state of the notebook.
@@ -119,8 +120,15 @@ function initialNotebookState(): NotebookState {
  * Actions and reducer for the notebook state.
  */
 const { reducer, createActions } = createReducer(initialNotebookState, {
-  createNewCell: (state, action: { cellId: CellId; before: boolean }) => {
-    const { cellId, before } = action;
+  createNewCell: (
+    state,
+    action: {
+      cellId: CellId;
+      before: boolean;
+      defaultWorkerUrl: string | null;
+    },
+  ) => {
+    const { cellId, before, defaultWorkerUrl } = action;
     const index = state.cellIds.indexOf(cellId);
     const insertionIndex = before ? index : index + 1;
     const newCellId = CellId.create();
@@ -130,7 +138,7 @@ const { reducer, createActions } = createReducer(initialNotebookState, {
       cellIds: arrayInsert(state.cellIds, insertionIndex, newCellId),
       cellData: {
         ...state.cellData,
-        [newCellId]: createCell({ id: newCellId }),
+        [newCellId]: createCell({ id: newCellId, workerUrl: defaultWorkerUrl }),
       },
       cellRuntime: {
         ...state.cellRuntime,
@@ -250,15 +258,13 @@ const { reducer, createActions } = createReducer(initialNotebookState, {
       scrollKey: cellId,
     };
   },
-  deleteCell: (state, action: { cellId: CellId; deleteIfFirst?: boolean }) => {
+  deleteCell: (state, action: { cellId: CellId }) => {
     const cellId = action.cellId;
-    const index = state.cellIds.indexOf(cellId);
-    // Default to deleting the first cell if not specified
-    const deleteIfFirst = action.deleteIfFirst ?? true;
-    if (state.cellIds.length === 1 || (!deleteIfFirst && index === 0)) {
+    if (state.cellIds.length === 1) {
       return state;
     }
 
+    const index = state.cellIds.indexOf(cellId);
     const cellKey = state.cellIds[index];
     const focusIndex = index === 0 ? 1 : index - 1;
     const scrollKey = state.cellIds[focusIndex];
@@ -308,6 +314,7 @@ const { reducer, createActions } = createReducer(initialNotebookState, {
         },
         cellRuntime: {
           ...state.cellRuntime,
+          // TODO(luca): restore workerUrl for undo
           [cellId]: createCellRuntimeState(),
         },
         cellHandles: {
@@ -368,6 +375,15 @@ const { reducer, createActions } = createReducer(initialNotebookState, {
       return {
         ...cell,
         name: name,
+      };
+    });
+  },
+  updateCellWorker: (state, action: { cellId: CellId; workerUrl: string }) => {
+    const { cellId, workerUrl } = action;
+    return updateCellData(state, cellId, (cell) => {
+      return {
+        ...cell,
+        workerUrl,
       };
     });
   },
@@ -684,6 +700,27 @@ export const useCellErrors = () => useAtomValue(cellErrorsAtom);
  * React-hook for the cell logs.
  */
 export const useCellLogs = () => useAtomValue(notebookAtom).cellLogs;
+
+/**
+ * React-hook to set cell workers if not set yet
+ *
+ * TODO(luca): maybe this hook should be registered for each cell individually
+ * to avoid re-running unnecessarily.
+ */
+export function useSetDefaultWorkerIfEmpty() {
+  const defaultWorker = useDefaultWorkerUrl();
+  const { cellData } = useNotebook();
+  const { updateCellWorker } = useCellActions();
+
+  if (!defaultWorker) {
+    return;
+  }
+  Objects.keys(cellData).forEach((cellId) => {
+    if (!cellData[cellId].workerUrl) {
+      updateCellWorker({ cellId, workerUrl: defaultWorker });
+    }
+  });
+}
 
 /// IMPERATIVE GETTERS
 
