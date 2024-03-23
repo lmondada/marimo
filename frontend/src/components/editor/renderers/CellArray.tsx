@@ -110,6 +110,7 @@ export const CellArray: React.FC<CellArrayProps> = ({
           code={cell.code}
           output={cell.output}
           consoleOutputs={cell.consoleOutputs}
+          workerUrl={cell.workerUrl}
           status={cell.status}
           updateCellCode={updateCellCode}
           prepareForRun={prepareForRun}

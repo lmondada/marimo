@@ -43,6 +43,7 @@ import { isOutputEmpty } from "@/core/cells/outputs";
 import { useHotkeysOnElement, useKeydownOnElement } from "@/hooks/useHotkey";
 import { useSetAtom } from "jotai";
 import { aiCompletionCellAtom } from "@/core/ai/state";
+import { useDefaultWorkerUrl } from "@/core/workers/state";
 
 /**
  * Imperative interface of the cell.
@@ -73,7 +74,13 @@ export interface CellProps
     >,
     Pick<
       CellData,
-      "id" | "code" | "edited" | "config" | "name" | "serializedEditorState"
+      | "id"
+      | "code"
+      | "edited"
+      | "config"
+      | "name"
+      | "serializedEditorState"
+      | "workerUrl"
     >,
     Pick<
       CellActions,
@@ -114,6 +121,7 @@ const CellComponent = (
     output,
     consoleOutputs,
     status,
+    workerUrl,
     runStartTimestamp,
     runElapsedTimeMs,
     edited,
@@ -144,6 +152,7 @@ const CellComponent = (
   ref: React.ForwardedRef<CellHandle>,
 ) => {
   useCellRenderCount().countRender();
+  const defaultWorkerUrl = useDefaultWorkerUrl();
 
   Logger.debug("Rendering Cell", cellId);
   const cellRef = useRef<HTMLDivElement>(null);
@@ -201,12 +210,12 @@ const CellComponent = (
   });
 
   const createBelow = useCallback(
-    () => createNewCell({ cellId, before: false }),
-    [cellId, createNewCell],
+    () => createNewCell({ cellId, before: false, defaultWorkerUrl }),
+    [cellId, createNewCell, defaultWorkerUrl],
   );
   const createAbove = useCallback(
-    () => createNewCell({ cellId, before: true }),
-    [cellId, createNewCell],
+    () => createNewCell({ cellId, before: true, defaultWorkerUrl }),
+    [cellId, createNewCell, defaultWorkerUrl],
   );
 
   // Close completion when focus leaves the cell's subtree.
@@ -378,6 +387,7 @@ const CellComponent = (
       cellId={cellId}
       config={cellConfig}
       status={status}
+      workerUrl={workerUrl}
       editorView={editorView.current}
       hasOutput={hasOutput}
       name={name}
@@ -451,6 +461,7 @@ const CellComponent = (
               <CellActionsDropdown
                 cellId={cellId}
                 status={status}
+                workerUrl={workerUrl}
                 editorView={editorView.current}
                 name={name}
                 config={cellConfig}

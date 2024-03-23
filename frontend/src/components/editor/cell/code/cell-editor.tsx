@@ -31,6 +31,7 @@ import { AiCompletionEditor } from "./ai-completion-editor";
 import { useAtom } from "jotai";
 import { aiCompletionCellAtom } from "@/core/ai/state";
 import { mergeRefs } from "@/utils/mergeRefs";
+import { useDefaultWorkerUrl } from "@/core/workers/state";
 
 export interface CellEditorProps
   extends Pick<CellRuntimeState, "status">,
@@ -84,6 +85,7 @@ const CellEditorInternal = ({
   const [aiCompletionCell, setAiCompletionCell] = useAtom(aiCompletionCellAtom);
   // DOM node where the editorView will be mounted
   const editorViewParentRef = useRef<HTMLDivElement>(null);
+  const defaultWorkerUrl = useDefaultWorkerUrl();
 
   const loading = status === "running" || status === "queued";
   const { sendToTop, sendToBottom } = useCellActions();
@@ -99,12 +101,12 @@ const CellEditorInternal = ({
   });
 
   const createBelow = useCallback(
-    () => createNewCell({ cellId, before: false }),
-    [cellId, createNewCell],
+    () => createNewCell({ cellId, before: false, defaultWorkerUrl }),
+    [cellId, createNewCell, defaultWorkerUrl],
   );
   const createAbove = useCallback(
-    () => createNewCell({ cellId, before: true }),
-    [cellId, createNewCell],
+    () => createNewCell({ cellId, before: true, defaultWorkerUrl }),
+    [cellId, createNewCell, defaultWorkerUrl],
   );
   const moveDown = useCallback(
     () => moveCell({ cellId, before: false }),
