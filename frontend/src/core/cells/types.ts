@@ -31,6 +31,7 @@ export function createCell({
   code = "",
   lastCodeRun = null,
   edited = false,
+  workerUrl = null,
   config = {},
   serializedEditorState = null,
 }: Partial<CellData> & { id: CellId }): CellData {
@@ -40,6 +41,7 @@ export function createCell({
     name: name,
     code: code,
     edited: edited,
+    workerUrl,
     lastCodeRun: lastCodeRun,
     serializedEditorState: serializedEditorState,
   };
@@ -73,6 +75,8 @@ export interface CellData {
   edited: boolean;
   /** snapshot of code that was last run */
   lastCodeRun: string | null;
+  /** Url of the cell worker */
+  workerUrl: string | null;
   /** cell configuration */
   config: CellConfig;
   /** serialized state of the underlying editor */

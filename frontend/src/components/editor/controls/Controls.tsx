@@ -24,6 +24,7 @@ import { FindReplace } from "@/components/find-replace/find-replace";
 import { AppConfig } from "@/core/config/config-schema";
 import { useShouldShowInterrupt } from "../cell/useShouldShowInterrupt";
 import { CommandPaletteButton } from "./command-palette-button";
+import { WorkerSelectorButton } from "./worker-selector-button";
 
 interface ControlsProps {
   filename: string | null;
@@ -148,6 +149,7 @@ export const Controls = ({
 
         <CommandPaletteButton />
         <KeyboardShortcuts />
+        <WorkerSelectorButton />
       </div>
 
       <div className={bottomRightControls}>
