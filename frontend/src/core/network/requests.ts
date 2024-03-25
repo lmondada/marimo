@@ -1,17 +1,28 @@
 /* Copyright 2024 Marimo. All rights reserved. */
+import { RuntimeMode, getRuntimeMode } from "@/utils/runtimeMode";
 import { PyodideBridge } from "../pyodide/bridge";
-import { isPyodide } from "../pyodide/utils";
-import { isStaticNotebook } from "../static/static-state";
 import { createNetworkRequests } from "./requests-network";
 import { createStaticRequests } from "./requests-static";
 import { createErrorToastingRequests } from "./requests-toasting";
+import { EditRequests, RunRequests } from "./types";
+import { createWorkersRequests } from "./requests-workers";
 
 function getRequest() {
-  const base = isPyodide()
-    ? PyodideBridge.INSTANCE
-    : isStaticNotebook()
-      ? createStaticRequests()
-      : createNetworkRequests();
+  let base: EditRequests & RunRequests;
+  switch (getRuntimeMode()) {
+    case RuntimeMode.Network:
+      base = createNetworkRequests();
+      break;
+    case RuntimeMode.Pyodide:
+      base = PyodideBridge.INSTANCE;
+      break;
+    case RuntimeMode.Static:
+      base = createStaticRequests();
+      break;
+    case RuntimeMode.Workers:
+      base = createWorkersRequests();
+      break;
+  }
 
   return createErrorToastingRequests(base);
 }

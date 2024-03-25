@@ -1,6 +1,6 @@
 /* Copyright 2024 Marimo. All rights reserved. */
 import { atom, useAtom, useAtomValue, useSetAtom } from "jotai";
-import { ReducerWithoutAction, createRef, useEffect, useMemo } from "react";
+import { ReducerWithoutAction, createRef, useMemo } from "react";
 import { CellMessage } from "../kernel/messages";
 import {
   CellConfig,

@@ -158,6 +158,7 @@ export class PyodideBridge implements RunRequests, EditRequests {
     });
     return null;
   };
+
   sendInterrupt = async (): Promise<null> => {
     if (this.interruptBuffer !== undefined) {
       // 2 sends a SIGINT
