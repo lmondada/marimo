@@ -7,6 +7,9 @@ import { derefNotNull } from "@/utils/dereference";
 import useEvent from "react-use-event-hook";
 import { getEditorCodeAsPython } from "@/core/codemirror/language/utils";
 import { Logger } from "@/utils/Logger";
+import { RuntimeMode, getRuntimeMode } from "@/utils/runtimeMode";
+import { CompilationHandlers } from "@/core/network/types";
+import { useCompilation } from "@/core/workers/runtime/compilation";
 
 /**
  * Creates a function that runs all cells that have been edited or interrupted.
@@ -38,6 +41,11 @@ export function useRunCell(cellId: CellId | undefined) {
 function useRunCells() {
   const notebook = useNotebook();
 
+  let compilationHandlers: CompilationHandlers | null = null;
+  if (getRuntimeMode() == RuntimeMode.Workers) {
+    compilationHandlers = useCompilation().handlers;
+  }
+
   const runCells = useEvent(async (cellIds: CellId[]) => {
     if (cellIds.length === 0) {
       return;
@@ -53,7 +61,7 @@ function useRunCells() {
     }
 
     RuntimeState.INSTANCE.registerRunStart();
-    await sendRun(cellIds, codes).catch((error) => {
+    await sendRun(cellIds, codes, compilationHandlers).catch((error) => {
       Logger.error(error);
       RuntimeState.INSTANCE.registerRunEnd();
     });

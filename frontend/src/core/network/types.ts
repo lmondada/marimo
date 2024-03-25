@@ -161,13 +161,25 @@ export interface RunRequests {
 }
 
 /**
+ * Handlers for compilation messages and results in Workers mode.
+ */
+export type CompilationHandlers = {
+  handleMessage: (data: string) => void;
+  handleResult: (result: {}) => void;
+};
+
+/**
  * Requests sent to the BE during edit mode.
  */
 export interface EditRequests {
   sendRename: (filename: string | null) => Promise<null>;
   sendSave: (request: SaveKernelRequest) => Promise<null>;
   sendStdin: (request: SendStdin) => Promise<null>;
-  sendRun: (cellIds: CellId[], codes: string[]) => Promise<null>;
+  sendRun: (
+    cellIds: CellId[],
+    codes: string[],
+    handlers: CompilationHandlers | null,
+  ) => Promise<null>;
   sendInterrupt: () => Promise<null>;
   sendShutdown: () => Promise<null>;
   sendFormat: (request: FormatRequest) => Promise<Record<CellId, string>>;

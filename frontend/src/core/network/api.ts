@@ -49,6 +49,37 @@ export const API = {
         throw error;
       });
   },
+  sse<RES>(
+    url: string,
+    {
+      handleMessage,
+      handleResult,
+    }: {
+      handleMessage: (data: string) => void;
+      handleResult: (result: RES) => void;
+    },
+    base_url: string | null = null,
+  ) {
+    base_url = base_url ?? `${document.baseURI}api`;
+    const fullUrl = base_url + url;
+    let sseSource = new EventSource(fullUrl);
+
+    /*
+     * Listen for result events similar to the following:
+     *
+     * event: result
+     * data: JSON of type RES
+     */
+    sseSource.addEventListener("result", (e) => {
+      handleResult(JSON.parse(e.data) as RES);
+    });
+    /**
+     * Any other events will be passed to the following
+     */
+    sseSource.addEventListener("message", (e) => {
+      handleMessage(e.data);
+    });
+  },
   headers() {
     return {
       "Marimo-Session-Id": getSessionId(),

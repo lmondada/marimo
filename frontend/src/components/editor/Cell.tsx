@@ -44,6 +44,9 @@ import { useHotkeysOnElement, useKeydownOnElement } from "@/hooks/useHotkey";
 import { useSetAtom } from "jotai";
 import { aiCompletionCellAtom } from "@/core/ai/state";
 import { useDefaultWorkerUrl } from "@/core/workers/state";
+import { RuntimeMode, getRuntimeMode } from "@/utils/runtimeMode";
+import { CompilationHandlers } from "@/core/network/types";
+import { useCompilation } from "@/core/workers/runtime/compilation";
 
 /**
  * Imperative interface of the cell.
@@ -195,6 +198,11 @@ const CellComponent = (
     [editorView, prepareToRunEffects],
   );
 
+  let compilationHandlers: CompilationHandlers | null = null;
+  if (getRuntimeMode() == RuntimeMode.Workers) {
+    compilationHandlers = useCompilation().handlers;
+  }
+
   const handleRun = useEvent(async () => {
     if (loading) {
       return;
@@ -203,7 +211,7 @@ const CellComponent = (
     const code = prepareToRunEffects();
 
     RuntimeState.INSTANCE.registerRunStart();
-    await sendRun([cellId], [code]).catch((error) => {
+    await sendRun([cellId], [code], compilationHandlers).catch((error) => {
       Logger.error("Error running cell", error);
       RuntimeState.INSTANCE.registerRunEnd();
     });
