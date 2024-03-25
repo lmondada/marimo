@@ -4,6 +4,7 @@ import { createReducer } from "@/utils/createReducer";
 import { Variable, VariableName, Variables } from "./types";
 import { atom, useAtomValue, useSetAtom } from "jotai";
 import { useMemo } from "react";
+import { CellId } from "../cells/ids";
 
 function initialState(): Variables {
   return {};
@@ -48,6 +49,32 @@ const { reducer, createActions } = createReducer(initialState, {
         dataType: dataType,
       };
     }
+    return newVariables;
+  },
+  addDeclaredBy: (state, action: { name: VariableName; cellId: CellId }) => {
+    const { name, cellId } = action;
+    const newVariables = { ...state };
+    if (!newVariables[name]) {
+      newVariables[name] = {
+        name,
+        declaredBy: [],
+        usedBy: [],
+      };
+    }
+    newVariables[name].declaredBy = [...newVariables[name].declaredBy, cellId];
+    return newVariables;
+  },
+  addUsedBy: (state, action: { name: VariableName; cellId: CellId }) => {
+    const { name, cellId } = action;
+    const newVariables = { ...state };
+    if (!newVariables[name]) {
+      newVariables[name] = {
+        name,
+        declaredBy: [],
+        usedBy: [],
+      };
+    }
+    newVariables[name].usedBy = [...newVariables[name].usedBy, cellId];
     return newVariables;
   },
 });

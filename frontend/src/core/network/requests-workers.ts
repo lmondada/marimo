@@ -5,21 +5,22 @@ import { EditRequests, RunRequests } from "./types";
 export function createWorkersRequests(): EditRequests & RunRequests {
   let requests = createNetworkRequests();
   // TODO: overwrite requests where useful (eventually everywhere?)
-  requests.sendRun = async (cellIds, codes, handlers) => {
-    if (!handlers) {
+  requests.sendRun = async (cellIds, codes, options) => {
+    if (!options?.handlers) {
       console.error(
         "compilation handlers cannot be null for workers runtime mode",
       );
       return null;
     }
-    const { jobId }: { jobId: string } = await API.post("/workers/compile", {
-      cellIds,
-      codes,
-    });
-    API.sse(
-      `/workers/compilationStatus?jobId=${encodeURIComponent(jobId)}`,
-      handlers,
+    const { jobId }: { jobId: string } = await API.post(
+      "/compile/submit",
+      {
+        cellIds,
+        codes,
+      },
+      { baseUrl: options.baseUrl ?? undefined },
     );
+    API.sse(`/compile/status?jobId=${encodeURIComponent(jobId)}`, options);
     return null;
   };
   return requests;

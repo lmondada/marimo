@@ -5,6 +5,7 @@ import { CellId } from "../cells/ids";
 import { CellConfig } from "../cells/types";
 import { RequestId } from "./DeferredRequestRegistry";
 import { FilePath } from "@/utils/paths";
+import { CompiledCell } from "../workers/runtime/types";
 
 // Ideally this would be generated from server.py, but for now we just
 // manually keep them in sync.
@@ -163,9 +164,14 @@ export interface RunRequests {
 /**
  * Handlers for compilation messages and results in Workers mode.
  */
-export type CompilationHandlers = {
+export type CompilationHandlers<RES> = {
   handleMessage: (data: string) => void;
-  handleResult: (result: {}) => void;
+  handleResult: (result: RES) => void;
+};
+
+export type SendRunOptions<RES> = {
+  handlers: CompilationHandlers<RES>;
+  baseUrl: string | null;
 };
 
 /**
@@ -178,7 +184,7 @@ export interface EditRequests {
   sendRun: (
     cellIds: CellId[],
     codes: string[],
-    handlers: CompilationHandlers | null,
+    options?: SendRunOptions<CompiledCell>,
   ) => Promise<null>;
   sendInterrupt: () => Promise<null>;
   sendShutdown: () => Promise<null>;

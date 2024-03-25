@@ -1,9 +1,22 @@
+import { CompilationHandlers } from "@/core/network/types";
+import { CompiledCell } from "./types";
+import { useCompiledCellsActions, useUpdateDataflowGraph } from "./state";
+
 // TODO: add atoms, make this a hook
-export function useCompilation() {
+export function useCompilationHandlers(): {
+  handlers: CompilationHandlers<CompiledCell>;
+} {
+  useUpdateDataflowGraph();
+  const { setCell } = useCompiledCellsActions();
   return {
     handlers: {
-      handleMessage: () => {},
-      handleResult: () => {},
+      handleMessage: (data) => {
+        // TODO
+        console.log(data);
+      },
+      handleResult: (data) => {
+        setCell(data);
+      },
     },
   };
 }

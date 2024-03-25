@@ -3,6 +3,7 @@ import { once } from "@/utils/once";
 import { Logger } from "../../utils/Logger";
 import { getMarimoServerToken } from "../dom/marimo-tag";
 import { getSessionId } from "../kernel/session";
+import { CompilationHandlers } from "./types";
 
 const getServerTokenOnce = once(() => {
   return getMarimoServerToken();
@@ -51,17 +52,17 @@ export const API = {
   },
   sse<RES>(
     url: string,
-    {
-      handleMessage,
-      handleResult,
-    }: {
-      handleMessage: (data: string) => void;
-      handleResult: (result: RES) => void;
+    opts: {
+      handlers: CompilationHandlers<RES>;
+      baseUrl: string | null;
     },
-    base_url: string | null = null,
   ) {
-    base_url = base_url ?? `${document.baseURI}api`;
-    const fullUrl = base_url + url;
+    let {
+      baseUrl,
+      handlers: { handleMessage, handleResult },
+    } = opts;
+    baseUrl = baseUrl ?? document.baseURI;
+    const fullUrl = `${baseUrl}api${url}`;
     let sseSource = new EventSource(fullUrl);
 
     /*
@@ -72,6 +73,7 @@ export const API = {
      */
     sseSource.addEventListener("result", (e) => {
       handleResult(JSON.parse(e.data) as RES);
+      sseSource.close();
     });
     /**
      * Any other events will be passed to the following

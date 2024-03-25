@@ -25,7 +25,6 @@ export const WorkerSelector: React.FC = () => {
 
   const workers = useWorkers();
   const { createFromUrl: createWorker } = useWorkersActions();
-  console.log("at render: ", workers);
 
   // Register hotkey to open the worker selector
   React.useEffect(() => {

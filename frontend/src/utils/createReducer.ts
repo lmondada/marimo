@@ -44,6 +44,7 @@ export interface ReducerCreatorResult<
 export function createReducer<
   State,
   RH extends ReducerHandlers<NoInfer<State>>,
+  V,
 >(initialState: () => State, reducers: RH): ReducerCreatorResult<State, RH> {
   return {
     reducer: (state, action: ReducerAction<RH>) => {

@@ -50,6 +50,9 @@ export const useDefaultWorkerUrl: () => string | null = () =>
 
 const { reducer, createActions } = createReducer(initialState, {
   createFromUrl: (state, url: string) => {
+    if (!url.endsWith("/")) {
+      url = url + "/";
+    }
     if (workerUrlExists(state.workers, url)) {
       return state;
     } else {
@@ -126,7 +129,7 @@ export function useCreateWorkerConnection() {
 
     const fetchAndUpdateWorkerConnection = async (url: string) => {
       try {
-        const response = await fetch(`${url}/metadata`, { signal });
+        const response = await fetch(`${url}metadata`, { signal });
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
