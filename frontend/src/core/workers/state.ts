@@ -102,7 +102,7 @@ const { reducer, createActions } = createReducer(initialState, {
 });
 
 /**
- * React hook to get the variables actions.
+ * React hook to get the workers actions.
  */
 export function useWorkersActions() {
   const setState = useSetAtom(state);

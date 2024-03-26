@@ -11,6 +11,7 @@ import {
   useWorkersActions,
 } from "@/core/workers/state";
 import { Worker } from "@/core/workers/types";
+import { useRecentWorkers } from "@/hooks/useRecentWorkers";
 
 export const workerSelectorAtom = atom(false);
 
@@ -23,8 +24,19 @@ export const WorkerSelector: React.FC = () => {
   // Hook to connect workers to remote and update metadata
   useCreateWorkerConnection();
 
+  const { recentWorkers, addRecentWorker } = useRecentWorkers();
+
   const workers = useWorkers();
-  const { createFromUrl: createWorker } = useWorkersActions();
+  const { createFromUrl } = useWorkersActions();
+
+  for (const worker of recentWorkers) {
+    createFromUrl(worker);
+  }
+
+  const createWorker = (url: string) => {
+    addRecentWorker(url);
+    createFromUrl(url);
+  };
 
   // Register hotkey to open the worker selector
   React.useEffect(() => {
@@ -101,15 +113,21 @@ function intoHTML(
                 return <WorkerListItem key={worker.url} worker={worker} />;
               })}
             </ul>
-            <Dg.DialogDescription className="overflow-hidden p-1 text-foreground px-1 py-1.5 text-xs font-medium text-muted-foreground">
+            {/* <Dg.DialogDescription className="overflow-hidden p-1 text-foreground px-1 py-1.5 text-xs font-medium text-muted-foreground">
               Recently Used Workers
-            </Dg.DialogDescription>
+            </Dg.DialogDescription> */}
             {/* This section should dynamically list recently used workers */}
-            <ul className="menu-item relative cursor-default select-none items-center rounded-sm px-1 py-1.5 text-sm outline-none focus:bg-accent focus:text-accent-foreground aria-selected:bg-accent aria-selected:text-accent-foreground">
+            {/* <ul className="menu-item relative cursor-default select-none items-center rounded-sm px-1 py-1.5 text-sm outline-none focus:bg-accent focus:text-accent-foreground aria-selected:bg-accent aria-selected:text-accent-foreground">
               {/* Example static list item */}
-              <li>Worker 3 - URL</li>
-              <li>Worker 4 - URL</li>
-            </ul>
+            {/* {recentWorkers.map((worker) => {
+                return (
+                  <WorkerListItem
+                    key={worker}
+                    worker={{ url: worker, connectionStatus: "connecting" }}
+                  />
+                );
+              })} */}
+            {/* </ul> */}
             <Dg.Description />
             <Dg.Close />
           </Dg.Content>
